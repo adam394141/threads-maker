@@ -338,9 +338,9 @@ return response.text;
               setResult(post);
               window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             } catch (err) {
-              console.error(err);
-              setError('生成失敗，請檢查 API 金鑰設定或稍後再試');
-            } finally {
+  console.error("錯誤詳情:", err);
+  setError('錯誤: ' + err.message);
+} finally {
               setLoading(false);
             }
           };
