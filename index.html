@@ -195,15 +195,10 @@ ${lengthGuides[length]}
               ? `請分析這個網頁的內容，然後用你的觀點寫成一篇 Threads 爆款貼文：${input}`
               : `請以「${input}」為主題，寫一篇 Threads 爆款貼文。`;
 
-            const response = await ai.models.generateContent({
+const response = await ai.models.generateContent({
   model: "gemini-1.5-flash",
-  contents: userPrompt,
-  config: {
-    systemInstruction: systemPrompt,
-    temperature: 0.85,
-  },
+  contents: systemPrompt + "\n\n" + userPrompt,
 });
-console.log("API Response:", response);
 return response.text;
           }
         };
