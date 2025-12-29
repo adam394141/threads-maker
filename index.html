@@ -196,7 +196,7 @@ ${lengthGuides[length]}
               : `請以「${input}」為主題，寫一篇 Threads 爆款貼文。`;
 
             const response = await ai.models.generateContent({
-              model: "gemini-2.0-flash",
+              model: "gemini-1.5-flash",
               contents: userPrompt,
               config: {
                 systemInstruction: systemPrompt,
