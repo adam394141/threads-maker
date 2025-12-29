@@ -196,15 +196,15 @@ ${lengthGuides[length]}
               : `請以「${input}」為主題，寫一篇 Threads 爆款貼文。`;
 
             const response = await ai.models.generateContent({
-              model: "gemini-1.5-flash",
-              contents: userPrompt,
-              config: {
-                systemInstruction: systemPrompt,
-                temperature: 0.85,
-                tools: mode === 'url' ? [{ googleSearch: {} }] : undefined,
-              },
-            });
-            return response.text;
+  model: "gemini-1.5-flash",
+  contents: userPrompt,
+  config: {
+    systemInstruction: systemPrompt,
+    temperature: 0.85,
+  },
+});
+console.log("API Response:", response);
+return response.text;
           }
         };
 
