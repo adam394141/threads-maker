@@ -33,19 +33,19 @@
 
         // ========== 版本資訊 ==========
         const VERSION_DATE = "2024-12-30";
-        const VERSION_TEXT = "v1.3 更新：爆款素材包（標題+內文+勾子）";
+        const VERSION_TEXT = "v1.4 更新：爆款素材包兩階段流程 + 增加文案字數";
         // ==============================
 
         // ========== 請在這裡填入你的 Groq API Key ==========
         const GROQ_API_KEY = "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";
         // ==================================================
 
-        // --- SEO 爆款 Prompt 設定 ---
+        // --- SEO 爆款 Prompt 設定（字數增加版）---
         const getSystemPrompt = (length) => {
           const lengthGuides = {
-            short: "【極短精煉】總字數：80-120字。結構：鉤子(1句) + 核心觀點(1-2句) + 💡金句 + 互動勾子 + 2個Hashtag。風格：像一則有力的推文，一針見血。",
-            medium: "【標準模式】總字數：200-300字。結構：鉤子(1句) + 痛點(1段) + 方案(1段) + 💡金句 + 互動勾子 + 3-4個Hashtag。風格：完整但不囉嗦，每段≤2行。",
-            long: "【深度長文】總字數：400-600字。結構：鉤子(1句) + 故事/案例(1-2段) + 痛點分析(1段) + 具體方案(2-3點) + 💡金句 + 互動勾子 + 總結 + 5個Hashtag。風格：像一篇迷你部落格，有深度但段落分明。"
+            short: "【精簡版】總字數：200-300字。結構：鉤子(1句) + 痛點(1段) + 核心觀點(1-2段) + 💡金句 + 💬互動勾子 + 3個Hashtag。風格：簡潔有力但內容完整。",
+            medium: "【標準版】總字數：400-500字。結構：鉤子(1句) + 痛點(1-2段) + 方案(2段) + 💡金句 + 💬互動勾子 + 4個Hashtag。風格：完整敘述，每段≤3行，有故事感。",
+            long: "【深度版】總字數：600-800字。結構：鉤子(1句) + 故事/案例(2-3段) + 痛點分析(1-2段) + 具體方案(3-4點) + 💡金句 + 💬互動勾子 + 總結 + 5個Hashtag。風格：像一篇有深度的分享文，段落分明，內容紮實。"
           };
 
           return `## 角色設定
@@ -69,24 +69,26 @@
   * 懸念提問（例：「為什麼越努力越焦慮？」）
 - 目標：讓人在瀑布流中「三秒停頓」
 
-### 2. 痛點挖掘（第二段）💔
+### 2. 痛點挖掘 💔
 - 用「你是不是也...」「我以前也...」開頭
 - 描述具體場景，讓讀者產生「這就是在說我」的共鳴
 - 不要泛泛而談，要有畫面感
+- 可以加入個人故事或案例
 
-### 3. 價值方案（第三段）💡
-- 給予 1-3 個實際可行的建議或方法
+### 3. 價值方案 💡
+- 給予實際可行的建議或方法
 - 每個建議要具體到「今天就能做」
+- 可以用條列或故事方式呈現
 - 增加被「收藏」或「轉發」的機率
 
 ### 4. 金句（必須包含）✨
-- 格式：💡 觀點：[一句話金句]
+- 格式：💡 [一句話金句]
 - 這句話要適合被截圖分享
 - 要有記憶點，讓人想存下來
 
 ### 5. 互動勾子（必須包含）💬
-- 放在金句之後、Hashtag 之前
 - 格式：💬 [互動問句]
+- 放在金句之後、Hashtag 之前
 - 必須使用以下其中一種公式：
   * 提問型：「你覺得呢？」「你有過這種經驗嗎？」
   * 二選一型：「你是 A 還是 B？留言告訴我」
@@ -103,7 +105,7 @@
 - 格式：#關鍵字1 #關鍵字2 #關鍵字3
 
 ## SEO 與可讀性規則
-- ✅ 每段 ≤ 2 行（這是手機閱讀的黃金法則）
+- ✅ 每段 ≤ 3 行（手機閱讀友善）
 - ✅ 段落之間要有空行
 - ✅ 關鍵字自然融入標題和第一段
 - ✅ 使用台灣繁體中文和台灣用語
@@ -126,61 +128,12 @@ ${lengthGuides[length]}`;
 - 禁止使用「這篇文章說...」「根據這篇報導...」`;
         };
 
-        // 爆款素材包模式的 Prompt（標題 + 內文 + 勾子）
-        const getPackageSystemPrompt = () => {
+        // 爆款標題生成 Prompt（第一階段）
+        const getTitleSystemPrompt = () => {
           return `## 角色設定
-你是一位專精 Threads 與社群爆款的台灣創作者，擅長寫出讓人「三秒停頓」並「忍不住互動」的內容。
+你是一位專精社群爆款標題的台灣創作者，擅長寫出讓人「三秒停頓」的標題。
 
-## 輸出格式（必須嚴格遵守）
-
-請依照以下格式輸出完整的爆款素材包：
-
----
-
-## 🔥 爆款標題（5 選 1）
-
-1. [標題一：大部分人以為...型]
-2. [標題二：為什麼 X 反而 Y？型]
-3. [標題三：數字衝擊型]
-4. [標題四：直接戳痛點型]
-5. [標題五：懸念提問型]
-
----
-
-## 📝 內文
-
-[用 150-200 字寫一段精簡內文]
-
-要求：
-- 第一句承接標題的懸念
-- 中間戳中讀者痛點，製造共鳴
-- 給出 1-2 個實際可行的觀點或建議
-- 語氣像跟好朋友聊天
-- 每段不超過 2 行
-
----
-
-## 💡 金句
-
-💡 觀點：[一句話金句，適合被截圖分享]
-
----
-
-## 💬 互動勾子（3 選 1）
-
-1. [提問/二選一型勾子]
-2. [填空/分享型勾子]
-3. [投票/挑戰型勾子]
-
----
-
-## #️⃣ Hashtag
-
-#標籤1 #標籤2 #標籤3 #標籤4
-
----
-
-## 爆款標題公式說明
+## 爆款標題公式（必須使用 5 種不同公式）
 
 ### 公式一：「大部分人以為...」認知顛覆型
 - 格式：大部分人以為 [常見認知]
@@ -198,35 +151,81 @@ ${lengthGuides[length]}`;
 - 格式：你是不是也 [痛點描述]
 - 例子：你是不是也常常加班到懷疑人生？
 
-### 公式五：懸念提問型
-- 格式：[引發好奇的問題]
-- 例子：為什麼我放棄年薪百萬的工作？
+### 公式五：懸念揭露型
+- 格式：[現象/職業/領域] 的真相是...
+- 例子：現在老師離職率超高
 
-## 互動勾子公式說明
+## 輸出格式（必須嚴格遵守）
+請輸出 5 個標題，每個標題一行，格式如下：
 
-- 提問型：「你覺得呢？」「你有過這種經驗嗎？」
-- 二選一型：「你是 A 還是 B？」
-- 填空型：「___是我今年最大的改變，你呢？」
-- 分享型：「留言分享你的 [經驗]」
-- 投票型：「同意的打 1，不同意的打 2」
-- 挑戰型：「敢說出你的 [話題] 嗎？」
-- 標記型：「@一個需要看到這篇的朋友」
+1. [標題一]
+2. [標題二]
+3. [標題三]
+4. [標題四]
+5. [標題五]
 
 ## 嚴格禁止
+- ❌ 不要加任何解釋或說明
+- ❌ 不要加公式名稱
+- ❌ 只要標題，不要其他內容
+- ❌ 不要用「身為 AI」等語句
+- ✅ 使用台灣繁體中文`;
+        };
+
+        // 根據選定標題生成內文 Prompt（第二階段）
+        const getContentFromTitlePrompt = () => {
+          return `## 角色設定
+你是一位專精 Threads 與 SEO 的台灣創作者，擅長用「像朋友聊天」的口吻寫作。
+
+## 任務
+根據我給你的標題，寫一篇完整的 Threads 爆款貼文。
+
+## 輸出結構（必須包含以下所有元素）
+
+### 內文（300-400字）
+- 第一段：承接標題，製造共鳴（用「你是不是也...」或「我以前也...」開頭）
+- 第二段：深入痛點，描述具體場景
+- 第三段：給出觀點或解決方案
+- 第四段：總結或昇華
+
+### 金句
+💡 [一句話金句，適合被截圖分享]
+
+### 互動勾子
+💬 [一個讓人忍不住想回覆的問句]
+
+互動勾子類型（選一種）：
+- 提問型：「你覺得呢？」
+- 二選一型：「你是 A 還是 B？」
+- 填空型：「___是我最大的改變，你呢？」
+- 投票型：「同意的打 1，不同意的打 2」
+- 標記型：「@一個需要看到這篇的朋友」
+
+### Hashtag
+#標籤1 #標籤2 #標籤3 #標籤4
+
+## 寫作規則
+- ✅ 每段 ≤ 3 行
+- ✅ 段落之間要有空行
+- ✅ 語氣像跟好朋友聊天
+- ✅ 使用台灣繁體中文
 - ❌ 不要用「身為 AI」、「根據資料」等語句
-- ❌ 不要用企業文案的僵硬感
-- ❌ 不要說教或講大道理
-- ❌ 使用台灣繁體中文和台灣用語`;
+- ❌ 不要說教`;
         };
 
         // --- AI 生成函數 (使用 Groq API) ---
-        const generateContent = async (input, mode, length) => {
+        const generateContent = async (input, mode, length, selectedTitle = null) => {
           let systemPrompt;
           let userPrompt;
 
-          if (mode === 'package') {
-            systemPrompt = getPackageSystemPrompt();
-            userPrompt = `請針對「${input}」這個主題，生成完整的爆款素材包（包含 5 個標題選項、內文、金句、3 個互動勾子選項、Hashtag）。`;
+          if (mode === 'package-titles') {
+            // 第一階段：生成5個標題
+            systemPrompt = getTitleSystemPrompt();
+            userPrompt = `請針對「${input}」這個主題，生成 5 個不同公式的爆款標題。`;
+          } else if (mode === 'package-content') {
+            // 第二階段：根據選定標題生成內文
+            systemPrompt = getContentFromTitlePrompt();
+            userPrompt = `請根據這個標題寫一篇完整的 Threads 貼文：\n\n標題：${selectedTitle}\n\n主題背景：${input}`;
           } else if (mode === 'url') {
             systemPrompt = getUrlSystemPrompt(length);
             userPrompt = `請分析這個主題/網頁內容，然後用你的觀點寫成一篇 Threads 爆款貼文：${input}`;
@@ -266,7 +265,7 @@ ${lengthGuides[length]}`;
         };
 
         // --- PostCard 元件 ---
-        const PostCard = ({ content, onRegenerate, mode }) => {
+        const PostCard = ({ content, onRegenerate }) => {
           const [copied, setCopied] = useState(false);
           const paragraphs = content.split('\n');
 
@@ -274,13 +273,6 @@ ${lengthGuides[length]}`;
             navigator.clipboard.writeText(content);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-          };
-
-          const getCardTitle = () => {
-            switch(mode) {
-              case 'package': return '爆款素材包';
-              default: return 'Threads_Maker';
-            }
           };
 
           return (
@@ -291,7 +283,7 @@ ${lengthGuides[length]}`;
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-[#452a00] font-bold">T</div>
                     <div>
                       <div className="font-bold text-sm text-[#452a00]">
-                        {getCardTitle()} 
+                        Threads_Maker
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-1">PRO</span>
                       </div>
                       <div className="text-[10px] text-amber-400">剛剛生成 • AI 創作</div>
@@ -306,22 +298,15 @@ ${lengthGuides[length]}`;
                   {paragraphs.map((p, i) => {
                     if (!p.trim()) return <div key={i} className="h-2"></div>;
                     
-                    // 判斷不同類型的行
-                    const isMainHeader = p.startsWith('## ');
-                    const isSeparator = p.trim() === '---';
-                    const isHighlight = p.includes('💡') && !p.startsWith('##');
+                    const isHighlight = p.includes('💡') && !p.startsWith('##') && !p.startsWith('#');
                     const isInteraction = p.includes('💬') && !p.startsWith('##');
-                    const isHashtag = (p.trim().startsWith('#') && !p.startsWith('##') && !p.startsWith('#️⃣')) || (p.includes('#') && p.split('#').length > 2);
-                    const isNumbered = /^\d+[\.\、]/.test(p.trim());
+                    const isHashtag = (p.trim().startsWith('#') && !p.startsWith('##') && !p.startsWith('#️⃣') && p.includes(' #')) || (p.split('#').length > 2 && !p.startsWith('##'));
+                    const isHeader = p.startsWith('### ') || p.startsWith('## ');
                     
-                    if (isSeparator) {
-                      return <hr key={i} className="border-amber-100 my-4" />;
-                    }
-                    
-                    if (isMainHeader) {
+                    if (isHeader) {
                       return (
-                        <h3 key={i} className="text-lg font-black text-[#452a00] mt-6 mb-3 flex items-center gap-2">
-                          {p.replace('## ', '')}
+                        <h3 key={i} className="text-base font-black text-[#452a00] mt-4 mb-2">
+                          {p.replace('### ', '').replace('## ', '')}
                         </h3>
                       );
                     }
@@ -329,10 +314,9 @@ ${lengthGuides[length]}`;
                     return (
                       <p key={i} className={`
                         ${isHighlight ? 'text-base font-bold text-[#452a00] border-l-4 border-[#FCC800] pl-4 py-2 bg-amber-50/50 rounded-r-lg my-3' : ''}
-                        ${isInteraction ? 'text-base font-bold text-blue-600 border-l-4 border-blue-400 pl-4 py-2 bg-blue-50/50 rounded-r-lg my-2' : ''}
+                        ${isInteraction ? 'text-base font-bold text-blue-600 border-l-4 border-blue-400 pl-4 py-2 bg-blue-50/50 rounded-r-lg my-3' : ''}
                         ${isHashtag ? 'text-sm text-amber-500 font-medium py-2' : ''}
-                        ${isNumbered ? 'text-base text-[#452a00] py-1.5 pl-2 border-l-2 border-amber-200 ml-2' : ''}
-                        ${!isHighlight && !isInteraction && !isHashtag && !isNumbered ? 'text-base text-amber-900 leading-relaxed' : ''}
+                        ${!isHighlight && !isInteraction && !isHashtag ? 'text-base text-amber-900 leading-relaxed' : ''}
                       `}>
                         {p.replace(/\*\*/g, '')}
                       </p>
@@ -353,6 +337,52 @@ ${lengthGuides[length]}`;
           );
         };
 
+        // --- 標題選擇元件 ---
+        const TitleSelector = ({ titles, onSelect, onRegenerate, loading }) => {
+          const parseTitles = (text) => {
+            const lines = text.split('\n').filter(line => line.trim());
+            return lines.map(line => line.replace(/^\d+[\.\、\:\：]\s*/, '').trim()).filter(t => t.length > 0);
+          };
+
+          const titleList = parseTitles(titles);
+
+          return (
+            <div className="w-full animate-slide-up mt-8">
+              <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl shadow-amber-200/50 border border-amber-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-400 to-red-500 flex items-center justify-center text-white font-bold">🔥</div>
+                  <div>
+                    <div className="font-bold text-sm text-[#452a00]">選擇一個爆款標題</div>
+                    <div className="text-[10px] text-amber-400">點擊標題後會生成完整內文</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {titleList.map((title, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onSelect(title)}
+                      disabled={loading}
+                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${loading ? 'opacity-50 cursor-not-allowed' : 'border-amber-100 hover:border-[#FCC800] hover:bg-amber-50 active:scale-[0.98]'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg font-black text-[#FCC800]">{i + 1}</span>
+                        <span className="text-base font-bold text-[#452a00] leading-relaxed">{title}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-amber-50">
+                  <button onClick={onRegenerate} disabled={loading} className="w-full py-3 text-sm font-bold text-amber-500 hover:text-amber-700 transition-colors border border-amber-200 rounded-xl hover:bg-amber-50 disabled:opacity-50">
+                    🔄 重新生成標題
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         // --- 主程式 App ---
         function App() {
           const [inputMode, setInputMode] = useState('topic');
@@ -361,6 +391,11 @@ ${lengthGuides[length]}`;
           const [result, setResult] = useState('');
           const [loading, setLoading] = useState(false);
           const [error, setError] = useState('');
+          
+          // 爆款素材包的狀態
+          const [packageStep, setPackageStep] = useState(1); // 1: 選標題, 2: 顯示內文
+          const [generatedTitles, setGeneratedTitles] = useState('');
+          const [selectedTitle, setSelectedTitle] = useState('');
 
           const handleGenerate = async () => {
             if (!inputText.trim()) {
@@ -371,10 +406,20 @@ ${lengthGuides[length]}`;
             setLoading(true);
             setError('');
             setResult('');
+            setGeneratedTitles('');
+            setSelectedTitle('');
+            setPackageStep(1);
             
             try {
-              const post = await generateContent(inputText, inputMode, length);
-              setResult(post);
+              if (inputMode === 'package') {
+                // 爆款素材包：第一階段生成標題
+                const titles = await generateContent(inputText, 'package-titles', length);
+                setGeneratedTitles(titles);
+              } else {
+                // 其他模式：直接生成完整內文
+                const post = await generateContent(inputText, inputMode, length);
+                setResult(post);
+              }
               window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             } catch (err) {
               console.error("生成錯誤:", err);
@@ -384,10 +429,53 @@ ${lengthGuides[length]}`;
             }
           };
 
+          const handleTitleSelect = async (title) => {
+            setLoading(true);
+            setSelectedTitle(title);
+            setError('');
+            
+            try {
+              // 第二階段：根據選定標題生成內文
+              const content = await generateContent(inputText, 'package-content', length, title);
+              setResult(`${title}\n\n${content}`);
+              setPackageStep(2);
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            } catch (err) {
+              console.error("生成錯誤:", err);
+              setError('錯誤: ' + err.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          const handleRegenerateTitles = async () => {
+            setLoading(true);
+            setError('');
+            
+            try {
+              const titles = await generateContent(inputText, 'package-titles', length);
+              setGeneratedTitles(titles);
+            } catch (err) {
+              console.error("生成錯誤:", err);
+              setError('錯誤: ' + err.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          const handleModeChange = (mode) => {
+            setInputMode(mode);
+            setResult('');
+            setGeneratedTitles('');
+            setSelectedTitle('');
+            setPackageStep(1);
+            setError('');
+          };
+
           const getModeDescription = () => {
             switch(inputMode) {
               case 'topic': return '💡 輸入任何主題，AI 會用爆款公式幫你寫出完整貼文';
-              case 'package': return '🎁 一次生成：5 個標題 + 內文 + 金句 + 3 個互動勾子 + Hashtag';
+              case 'package': return '🎁 兩步驟：先選標題 → 再生成內文（含金句+互動勾子+Hashtag）';
               case 'url': return '🔗 輸入主題或描述，AI 會用「你的視角」重新詮釋';
               default: return '';
             }
@@ -405,7 +493,7 @@ ${lengthGuides[length]}`;
           const getButtonText = () => {
             if (loading) return '🚀 AI 正在打造你的爆款內容...';
             switch(inputMode) {
-              case 'package': return '生成爆款素材包';
+              case 'package': return '生成爆款標題';
               default: return '生成爆款文案';
             }
           };
@@ -432,9 +520,9 @@ ${lengthGuides[length]}`;
                 <div className="bg-white rounded-[2.5rem] shadow-xl p-8 border border-amber-50">
                   {/* Mode Toggle - 3 個選項 */}
                   <div className="flex gap-2 mb-6 bg-amber-50 p-1.5 rounded-2xl">
-                    <button onClick={()=>setInputMode('topic')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='topic'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>✍️ 主題創作</button>
-                    <button onClick={()=>setInputMode('package')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='package'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🎁 爆款素材包</button>
-                    <button onClick={()=>setInputMode('url')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='url'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔗 網頁轉譯</button>
+                    <button onClick={()=>handleModeChange('topic')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='topic'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>✍️ 主題創作</button>
+                    <button onClick={()=>handleModeChange('package')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='package'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🎁 爆款素材包</button>
+                    <button onClick={()=>handleModeChange('url')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='url'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔗 網頁轉譯</button>
                   </div>
 
                   {/* Mode Description */}
@@ -451,9 +539,9 @@ ${lengthGuides[length]}`;
                       </div>
                       <div className="grid grid-cols-3 gap-2 p-1.5 bg-amber-50 rounded-2xl">
                         {[
-                          { key: 'short', label: '極短', desc: '80-120字' },
-                          { key: 'medium', label: '標準', desc: '200-300字' },
-                          { key: 'long', label: '深度', desc: '400-600字' }
+                          { key: 'short', label: '精簡', desc: '200-300字' },
+                          { key: 'medium', label: '標準', desc: '400-500字' },
+                          { key: 'long', label: '深度', desc: '600-800字' }
                         ].map(l => (
                           <button 
                             key={l.key} 
@@ -468,16 +556,14 @@ ${lengthGuides[length]}`;
                     </div>
                   )}
 
-                  {/* 爆款素材包說明 */}
+                  {/* 爆款素材包流程說明 */}
                   {inputMode === 'package' && (
                     <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl border border-amber-100">
-                      <p className="text-xs font-bold text-[#452a00] mb-2">📦 素材包內容：</p>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-amber-700">
-                        <div>🔥 5 個爆款標題</div>
-                        <div>📝 精簡內文</div>
-                        <div>💡 金句</div>
-                        <div>💬 3 個互動勾子</div>
-                        <div className="col-span-2">#️⃣ Hashtag 組合</div>
+                      <p className="text-xs font-bold text-[#452a00] mb-2">📦 兩步驟流程：</p>
+                      <div className="flex items-center gap-2 text-[11px] text-amber-700">
+                        <span className={`px-2 py-1 rounded-full ${packageStep === 1 ? 'bg-[#FCC800] text-[#452a00] font-bold' : 'bg-amber-100'}`}>1. 選標題</span>
+                        <span>→</span>
+                        <span className={`px-2 py-1 rounded-full ${packageStep === 2 ? 'bg-[#FCC800] text-[#452a00] font-bold' : 'bg-amber-100'}`}>2. 生成內文</span>
                       </div>
                     </div>
                   )}
@@ -497,7 +583,18 @@ ${lengthGuides[length]}`;
                   {error && <p className="text-red-500 text-center mt-4 text-sm font-bold">{error}</p>}
                 </div>
 
-                {result && <PostCard content={result} onRegenerate={handleGenerate} mode={inputMode} />}
+                {/* 爆款素材包：顯示標題選擇 */}
+                {inputMode === 'package' && generatedTitles && packageStep === 1 && (
+                  <TitleSelector 
+                    titles={generatedTitles} 
+                    onSelect={handleTitleSelect}
+                    onRegenerate={handleRegenerateTitles}
+                    loading={loading}
+                  />
+                )}
+
+                {/* 顯示生成結果 */}
+                {result && <PostCard content={result} onRegenerate={inputMode === 'package' ? handleRegenerateTitles : handleGenerate} />}
                 
                 <footer className="mt-16 mb-8 text-center">
                   <div className="text-[10px] text-amber-300 font-bold tracking-widest uppercase mb-1">Powered by Llama 3.3</div>
