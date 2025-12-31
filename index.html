@@ -33,7 +33,7 @@
 
         // ========== 版本資訊 ==========
         const VERSION_DATE = "2024-12-30";
-        const VERSION_TEXT = "v1.1 更新：新增爆款標題生成功能";
+        const VERSION_TEXT = "v1.2 更新：新增爆款標題 + 互動勾子功能";
         // ==============================
 
         // ========== 請在這裡填入你的 Groq API Key ==========
@@ -43,9 +43,9 @@
         // --- SEO 爆款 Prompt 設定 ---
         const getSystemPrompt = (length) => {
           const lengthGuides = {
-            short: "【極短精煉】總字數：80-120字。結構：鉤子(1句) + 核心觀點(1-2句) + 💡金句 + 2個Hashtag。風格：像一則有力的推文，一針見血。",
-            medium: "【標準模式】總字數：200-300字。結構：鉤子(1句) + 痛點(1段) + 方案(1段) + 💡金句 + 3-4個Hashtag。風格：完整但不囉嗦，每段≤2行。",
-            long: "【深度長文】總字數：400-600字。結構：鉤子(1句) + 故事/案例(1-2段) + 痛點分析(1段) + 具體方案(2-3點) + 💡金句 + 總結 + 5個Hashtag。風格：像一篇迷你部落格，有深度但段落分明。"
+            short: "【極短精煉】總字數：80-120字。結構：鉤子(1句) + 核心觀點(1-2句) + 💡金句 + 互動勾子 + 2個Hashtag。風格：像一則有力的推文，一針見血。",
+            medium: "【標準模式】總字數：200-300字。結構：鉤子(1句) + 痛點(1段) + 方案(1段) + 💡金句 + 互動勾子 + 3-4個Hashtag。風格：完整但不囉嗦，每段≤2行。",
+            long: "【深度長文】總字數：400-600字。結構：鉤子(1句) + 故事/案例(1-2段) + 痛點分析(1段) + 具體方案(2-3點) + 💡金句 + 互動勾子 + 總結 + 5個Hashtag。風格：像一篇迷你部落格，有深度但段落分明。"
           };
 
           return `## 角色設定
@@ -84,7 +84,20 @@
 - 這句話要適合被截圖分享
 - 要有記憶點，讓人想存下來
 
-### 5. Hashtag 📌
+### 5. 互動勾子（必須包含）💬
+- 放在金句之後、Hashtag 之前
+- 格式：💬 [互動問句]
+- 必須使用以下其中一種公式：
+  * 提問型：「你覺得呢？」「你有過這種經驗嗎？」
+  * 二選一型：「你是 A 還是 B？留言告訴我」
+  * 填空型：「___是我今年最大的改變，你呢？」
+  * 分享型：「留言分享你的 [相關經驗]」
+  * 投票型：「同意的打 1，不同意的打 2」
+  * 挑戰型：「敢在留言區說出你的 [相關話題] 嗎？」
+  * 標記型：「@一個需要看到這篇的朋友」
+- 目標：讓讀者「忍不住想回覆」
+
+### 6. Hashtag 📌
 - 結尾附上相關 Hashtag
 - 選擇有搜尋量的標籤
 - 格式：#關鍵字1 #關鍵字2 #關鍵字3
@@ -165,6 +178,95 @@ ${lengthGuides[length]}`;
 - ❌ 不要用「身為 AI」等語句`;
         };
 
+        // 互動勾子模式的 Prompt
+        const getHookSystemPrompt = () => {
+          return `## 角色設定
+你是一位專精社群互動的台灣創作者，擅長寫出讓人「忍不住想回覆」的互動勾子。
+
+## 互動勾子公式（請使用多種不同類型）
+
+### 類型一：提問型
+- 讓讀者思考並想分享自己的看法
+- 例子：
+  * 「你覺得呢？」
+  * 「你有過這種經驗嗎？」
+  * 「說真的，你怎麼看？」
+
+### 類型二：二選一型
+- 給出兩個選項，讓讀者選邊站
+- 例子：
+  * 「你是選擇穩定還是挑戰？留言告訴我」
+  * 「早起派還是夜貓派？」
+  * 「A 還是 B，你站哪一邊？」
+
+### 類型三：填空型
+- 讓讀者用自己的經驗填空
+- 例子：
+  * 「___是我今年最大的改變，你呢？」
+  * 「如果可以重來，我會___」
+  * 「我最後悔的一件事是___」
+
+### 類型四：分享邀請型
+- 邀請讀者分享自己的故事
+- 例子：
+  * 「留言分享你的轉職故事」
+  * 「說說你是怎麼度過低潮期的？」
+  * 「分享一個改變你人生的決定」
+
+### 類型五：投票型
+- 用數字讓讀者快速表態
+- 例子：
+  * 「同意的打 1，不同意的打 2」
+  * 「做過的打 ✓，沒做過的打 ✗」
+  * 「有共鳴的留言 +1」
+
+### 類型六：挑戰型
+- 用輕微的挑釁激發回覆慾望
+- 例子：
+  * 「敢在留言區說出你的薪水嗎？」
+  * 「有勇氣承認的請舉手」
+  * 「敢面對真相的人才會留言」
+
+### 類型七：標記型
+- 讓讀者想到特定的人
+- 例子：
+  * 「@一個需要看到這篇的朋友」
+  * 「標記那個總是加班的同事」
+  * 「tag 一個你覺得該看這篇的人」
+
+### 類型八：預測型
+- 讓讀者猜測或預測結果
+- 例子：
+  * 「猜猜我後來怎麼了？」
+  * 「你覺得結局是什麼？」
+
+### 類型九：爭議型
+- 提出稍有爭議的觀點引發討論
+- 例子：
+  * 「這個觀點可能很多人不同意，但...」
+  * 「我知道這樣說會被罵，但我還是要說」
+
+### 類型十：共鳴型
+- 尋找有相同經驗的人
+- 例子：
+  * 「有同感的請讓我知道我不孤單」
+  * 「只有我這樣想嗎？」
+  * 「拜託告訴我不是只有我」
+
+## 輸出要求
+- 請針對給定主題，生成 10 個不同類型的互動勾子
+- 每個勾子獨立一行
+- 前面加上類型標籤，如【提問型】
+- 使用台灣繁體中文
+- 語氣要自然、像朋友聊天
+- 要讓人「看到就想回覆」
+
+## 嚴格禁止
+- ❌ 不要寫完整文章
+- ❌ 不要太正式或官方
+- ❌ 不要用「身為 AI」等語句`;
+        };
+
         // --- AI 生成函數 (使用 Groq API) ---
         const generateContent = async (input, mode, length) => {
           let systemPrompt;
@@ -173,6 +275,9 @@ ${lengthGuides[length]}`;
           if (mode === 'title') {
             systemPrompt = getTitleSystemPrompt();
             userPrompt = `請針對「${input}」這個主題，生成 5 個爆款標題。`;
+          } else if (mode === 'hook') {
+            systemPrompt = getHookSystemPrompt();
+            userPrompt = `請針對「${input}」這個主題，生成 10 個不同類型的互動勾子。`;
           } else if (mode === 'url') {
             systemPrompt = getUrlSystemPrompt(length);
             userPrompt = `請分析這個主題/網頁內容，然後用你的觀點寫成一篇 Threads 爆款貼文：${input}`;
@@ -212,7 +317,7 @@ ${lengthGuides[length]}`;
         };
 
         // --- PostCard 元件 ---
-        const PostCard = ({ content, onRegenerate, isTitle }) => {
+        const PostCard = ({ content, onRegenerate, mode }) => {
           const [copied, setCopied] = useState(false);
           const paragraphs = content.split('\n');
 
@@ -220,6 +325,14 @@ ${lengthGuides[length]}`;
             navigator.clipboard.writeText(content);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
+          };
+
+          const getCardTitle = () => {
+            switch(mode) {
+              case 'title': return '爆款標題';
+              case 'hook': return '互動勾子';
+              default: return 'Threads_Maker';
+            }
           };
 
           return (
@@ -230,7 +343,7 @@ ${lengthGuides[length]}`;
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center text-[#452a00] font-bold">T</div>
                     <div>
                       <div className="font-bold text-sm text-[#452a00]">
-                        {isTitle ? '爆款標題' : 'Threads_Maker'} 
+                        {getCardTitle()} 
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-1">PRO</span>
                       </div>
                       <div className="text-[10px] text-amber-400">剛剛生成 • AI 創作</div>
@@ -245,14 +358,18 @@ ${lengthGuides[length]}`;
                   {paragraphs.map((p, i) => {
                     if (!p.trim()) return <div key={i} className="h-2"></div>;
                     const isHighlight = p.includes('💡');
+                    const isInteraction = p.includes('💬');
                     const isHashtag = p.trim().startsWith('#') && !p.trim().startsWith('##');
                     const isNumbered = /^\d+[\.\、]/.test(p.trim());
+                    const isTypeLabel = p.includes('【') && p.includes('】');
                     return (
                       <p key={i} className={`
                         ${isHighlight ? 'text-lg font-bold text-[#452a00] border-l-4 border-[#FCC800] pl-4 py-1 bg-amber-50/50 rounded-r-lg' : ''}
+                        ${isInteraction ? 'text-base font-bold text-blue-600 border-l-4 border-blue-400 pl-4 py-1 bg-blue-50/50 rounded-r-lg' : ''}
                         ${isHashtag ? 'text-sm text-amber-500 font-medium' : ''}
-                        ${isNumbered && isTitle ? 'text-base font-bold text-[#452a00] py-2 border-b border-amber-100' : ''}
-                        ${!isHighlight && !isHashtag && !(isNumbered && isTitle) ? 'text-base text-amber-900 leading-relaxed' : ''}
+                        ${isNumbered && (mode === 'title' || mode === 'hook') ? 'text-base font-bold text-[#452a00] py-2 border-b border-amber-100' : ''}
+                        ${isTypeLabel ? 'text-xs font-bold text-amber-600 bg-amber-100 inline-block px-2 py-1 rounded mt-2' : ''}
+                        ${!isHighlight && !isInteraction && !isHashtag && !(isNumbered && (mode === 'title' || mode === 'hook')) && !isTypeLabel ? 'text-base text-amber-900 leading-relaxed' : ''}
                       `}>
                         {p.replace(/\*\*/g, '')}
                       </p>
@@ -306,9 +423,10 @@ ${lengthGuides[length]}`;
 
           const getModeDescription = () => {
             switch(inputMode) {
-              case 'topic': return '💡 輸入任何主題，AI 會用爆款公式幫你寫出吸睛貼文';
+              case 'topic': return '💡 輸入任何主題，AI 會用爆款公式幫你寫出吸睛貼文（含互動勾子）';
               case 'url': return '🔗 輸入主題或描述，AI 會用「你的視角」重新詮釋';
               case 'title': return '🔥 輸入主題，AI 會生成 5 個「讓人想點進去」的爆款標題';
+              case 'hook': return '💬 輸入主題，AI 會生成 10 個「讓人忍不住回覆」的互動勾子';
               default: return '';
             }
           };
@@ -318,7 +436,17 @@ ${lengthGuides[length]}`;
               case 'topic': return '例如：如何從 0 到 1 開始做副業、為什麼早起反而更累、30歲轉職的真實心得...';
               case 'url': return '輸入你想創作的主題或關鍵字...';
               case 'title': return '例如：教育問題、職場加班、理財觀念、親子關係...';
+              case 'hook': return '例如：職場、感情、理財、健康、育兒...';
               default: return '';
+            }
+          };
+
+          const getButtonText = () => {
+            if (loading) return '🚀 AI 正在打造你的爆款內容...';
+            switch(inputMode) {
+              case 'title': return '生成爆款標題';
+              case 'hook': return '生成互動勾子';
+              default: return '生成爆款文案';
             }
           };
 
@@ -342,11 +470,12 @@ ${lengthGuides[length]}`;
                 </div>
 
                 <div className="bg-white rounded-[2.5rem] shadow-xl p-8 border border-amber-50">
-                  {/* Mode Toggle - 3 個選項 */}
-                  <div className="flex gap-2 mb-6 bg-amber-50 p-1.5 rounded-2xl">
-                    <button onClick={()=>setInputMode('topic')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='topic'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>✍️ 主題創作</button>
-                    <button onClick={()=>setInputMode('title')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='title'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔥 爆款標題</button>
-                    <button onClick={()=>setInputMode('url')} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${inputMode==='url'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔗 網頁轉譯</button>
+                  {/* Mode Toggle - 4 個選項 */}
+                  <div className="grid grid-cols-4 gap-2 mb-6 bg-amber-50 p-1.5 rounded-2xl">
+                    <button onClick={()=>setInputMode('topic')} className={`py-3 rounded-xl text-xs font-bold transition-all ${inputMode==='topic'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>✍️ 主題創作</button>
+                    <button onClick={()=>setInputMode('title')} className={`py-3 rounded-xl text-xs font-bold transition-all ${inputMode==='title'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔥 爆款標題</button>
+                    <button onClick={()=>setInputMode('hook')} className={`py-3 rounded-xl text-xs font-bold transition-all ${inputMode==='hook'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>💬 互動勾子</button>
+                    <button onClick={()=>setInputMode('url')} className={`py-3 rounded-xl text-xs font-bold transition-all ${inputMode==='url'?'bg-[#FCC800] shadow-md':'text-amber-500'}`}>🔗 網頁轉譯</button>
                   </div>
 
                   {/* Mode Description */}
@@ -354,8 +483,8 @@ ${lengthGuides[length]}`;
                     <p className="text-xs text-amber-600">{getModeDescription()}</p>
                   </div>
 
-                  {/* Length Selector - 只在非標題模式顯示 */}
-                  {inputMode !== 'title' && (
+                  {/* Length Selector - 只在主題創作和網頁轉譯模式顯示 */}
+                  {(inputMode === 'topic' || inputMode === 'url') && (
                     <div className="mb-6">
                       <div className="flex justify-between mb-3 px-1">
                         <label className="text-xs font-black text-[#452a00] uppercase tracking-wider">文案篇幅</label>
@@ -389,13 +518,13 @@ ${lengthGuides[length]}`;
                   />
 
                   <button onClick={handleGenerate} disabled={loading} className={`w-full py-4 rounded-2xl font-black text-lg shadow-xl transition-all transform active:scale-95 ${loading ? 'bg-amber-100 text-amber-300' : 'bg-[#FCC800] text-[#452a00] hover:brightness-105 shadow-amber-200'}`}>
-                    {loading ? '🚀 AI 正在打造你的爆款文案...' : (inputMode === 'title' ? '生成爆款標題' : '生成爆款文案')}
+                    {getButtonText()}
                   </button>
                   
                   {error && <p className="text-red-500 text-center mt-4 text-sm font-bold">{error}</p>}
                 </div>
 
-                {result && <PostCard content={result} onRegenerate={handleGenerate} isTitle={inputMode === 'title'} />}
+                {result && <PostCard content={result} onRegenerate={handleGenerate} mode={inputMode} />}
                 
                 <footer className="mt-16 mb-8 text-center">
                   <div className="text-[10px] text-amber-300 font-bold tracking-widest uppercase mb-1">Powered by Llama 3.3</div>
